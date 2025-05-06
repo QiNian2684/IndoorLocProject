@@ -120,9 +120,10 @@ class TransformerFeatureExtractor(nn.Module):
             ndarray: 提取的特征
         """
         self.eval()  # 设置为评估模式
+        device = next(self.parameters()).device  # 获取模型当前设备
         with torch.no_grad():
-            X_tensor = torch.FloatTensor(X)
-            features = self.forward(X_tensor).numpy()
+            X_tensor = torch.FloatTensor(X).to(device)
+            features = self.forward(X_tensor).cpu().numpy()
         return features
 
 

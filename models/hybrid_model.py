@@ -87,11 +87,15 @@ class SVRTransformerHybrid(PositioningModel):
         # Create the feature extractor with filtered parameters
         self.feature_extractor = TransformerFeatureExtractor(**transformer_params)
 
+        # 确保特征提取器在正确的设备上
+        self.feature_extractor = self.feature_extractor.to(self.device)
+        print(f"特征提取器已移至 {self.device} 设备")
+
         # 如果需要训练Transformer特征提取器
         # 这里略去Transformer训练代码，直接使用预训练模型
         print(f"使用预训练的Transformer特征提取器...")
 
-        # 提取特征
+        # 提取特征 - 确保张量在正确的设备上
         X_tensor = torch.FloatTensor(X).to(self.device)
         self.feature_extractor.eval()
         with torch.no_grad():
