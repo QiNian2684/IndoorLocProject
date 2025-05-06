@@ -1,15 +1,16 @@
-# 忽略全部
+# 1. 忽略一切
 *
 
-# 允许递归进入子目录
+# 2. 取消对子目录的忽略（否则子目录下的文件无法再被反向 include）
 !*/
 
-# 保留所有层级的 .py
+# 3. 不忽略 .gitignore 文件本身（一般 git 会自动跟踪 `.gitignore`，但这里保险写一下）
+!.gitignore
+
+# 4. 不忽略所有 .py 文件，包括子目录下
+!*.py
 !**/*.py
 
-# 保留所有层级的 requirements*.txt
+# 5. 不忽略 requirements*.txt (如 requirements.txt / requirements-dev.txt 等)
+!requirements*.txt
 !**/requirements*.txt
-
-# 可选：保留顶层文档
-!README.md
-!.gitignore
