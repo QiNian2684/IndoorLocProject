@@ -272,7 +272,8 @@ def train_and_evaluate(config=None):
         integration_type=config['model']['hybrid']['integration_type'],
         transformer_params=config['model']['transformer'],
         svr_params=config['model']['svr'],
-        weights=config['model']['hybrid']['weights']
+        weights=config['model']['hybrid']['weights'],
+        early_stopping_config=config['model']['early_stopping']
     )
 
     # 记录训练开始时间

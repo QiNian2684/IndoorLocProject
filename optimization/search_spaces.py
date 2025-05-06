@@ -1,9 +1,19 @@
 """定义超参数搜索空间的模块"""
 
+# 为所有搜索空间添加早停参数
+early_stopping_config = {
+    'optimize': True,
+    'patience': [5, 30],  # 搜索范围
+    'min_delta': [0.0001, 0.01]  # 搜索范围
+}
+
 # 默认搜索空间定义
 DEFAULT_SEARCH_SPACE = {
     # 集成类型
     'integration_type': ['feature_extraction', 'ensemble', 'end2end'],
+
+    # 早停参数
+    'early_stopping': early_stopping_config,
 
     # Transformer参数
     'd_model': [64, 128, 256, 512],
@@ -109,3 +119,10 @@ def get_search_space(space_type='default'):
         raise ValueError(f"未知的搜索空间类型: {space_type}")
 
     return space_types[space_type]
+
+# 确保其他搜索空间也包含早停配置
+LIGHT_SEARCH_SPACE['early_stopping'] = early_stopping_config
+COMPREHENSIVE_SEARCH_SPACE['early_stopping'] = early_stopping_config
+FEATURE_EXTRACTION_SEARCH_SPACE['early_stopping'] = early_stopping_config
+ENSEMBLE_SEARCH_SPACE['early_stopping'] = early_stopping_config
+END2END_SEARCH_SPACE['early_stopping'] = early_stopping_config

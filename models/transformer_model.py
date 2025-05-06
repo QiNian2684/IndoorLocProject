@@ -95,17 +95,23 @@ class TransformerPositioningModel(PositioningModel):
         self.model = None
         self.training_history = []
 
-    def fit(self, X, y):
+    def fit(self, X, y, X_val=None, y_val=None, early_stopping_config=None):
         """
         训练Transformer模型
 
         参数:
             X: 特征数据
             y: 目标值 (经度和纬度)
+            X_val: 验证特征数据
+            y_val: 验证目标值
+            early_stopping_config: 早停配置
 
         返回:
             self: 模型实例
         """
+        # 导入早停机制
+        from utils.early_stopping import EarlyStopping
+
         # 创建模型
         self.model = TransformerRegressor(**self.model_params).to(self.device)
 
@@ -115,9 +121,27 @@ class TransformerPositioningModel(PositioningModel):
         dataset = TensorDataset(X_tensor, y_tensor)
         dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
+        # 准备验证数据
+        val_dataloader = None
+        if X_val is not None and y_val is not None:
+            X_val_tensor = torch.FloatTensor(X_val).to(self.device)
+            y_val_tensor = torch.FloatTensor(y_val).to(self.device)
+            val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
+            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size)
+
         # 优化器和损失函数
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         criterion = nn.MSELoss()
+
+        # 初始化早停机制
+        early_stopping = None
+        if early_stopping_config and early_stopping_config.get('enabled', False):
+            early_stopping = EarlyStopping(
+                patience=early_stopping_config.get('patience', 15),
+                min_delta=early_stopping_config.get('min_delta', 0.0001),
+                verbose=early_stopping_config.get('verbose', True),
+                mode=early_stopping_config.get('mode', 'min'),
+            )
 
         # 训练循环
         self.model.train()
@@ -131,12 +155,37 @@ class TransformerPositioningModel(PositioningModel):
                 optimizer.step()
                 epoch_loss += loss.item()
 
-            # 记录每个epoch的损失
+            # 计算平均损失
             avg_loss = epoch_loss / len(dataloader)
             self.training_history.append(avg_loss)
 
+            # 验证损失
+            val_loss = None
+            if val_dataloader:
+                self.model.eval()
+                val_epoch_loss = 0.0
+                with torch.no_grad():
+                    for val_inputs, val_targets in val_dataloader:
+                        val_outputs = self.model(val_inputs)
+                        val_loss = criterion(val_outputs, val_targets)
+                        val_epoch_loss += val_loss.item()
+                val_loss = val_epoch_loss / len(val_dataloader)
+                self.model.train()
+
             if (epoch + 1) % 10 == 0:
-                print(f'Epoch {epoch + 1}/{self.epochs}, Loss: {avg_loss:.6f}')
+                log_msg = f'Epoch {epoch + 1}/{self.epochs}, Loss: {avg_loss:.6f}'
+                if val_loss:
+                    log_msg += f', Val Loss: {val_loss:.6f}'
+                print(log_msg)
+
+            # 检查早停条件
+            if early_stopping and val_loss is not None:
+                if early_stopping(val_loss, self.model):
+                    print(f"早停触发，在第{epoch + 1}轮停止训练")
+                    # 加载最佳模型（如果保存了的话）
+                    if early_stopping.save_path:
+                        self.model.load_state_dict(torch.load(early_stopping.save_path))
+                    break
 
         return self
 

@@ -16,6 +16,15 @@ MODEL_CONFIG = {
     # 通用配置
     'device': 'cuda',  # 'cuda', 'cpu'
 
+    # 早停配置
+    'early_stopping': {
+        'enabled': True,
+        'patience': 15,
+        'min_delta': 0.0001,
+        'verbose': True,
+        'mode': 'min'
+    },
+
     # SVR配置
     'svr': {
         'kernel': 'rbf',  # 'linear', 'poly', 'rbf', 'sigmoid'

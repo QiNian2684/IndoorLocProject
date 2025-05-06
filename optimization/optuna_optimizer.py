@@ -61,6 +61,15 @@ class OptunaSVRTransformerOptimizer:
                 # 从试验中提取参数
                 params = self._suggest_params(trial)
 
+                # 创建早停配置
+                early_stopping_config = {
+                    'enabled': True,
+                    'patience': params.get('patience', 15),
+                    'min_delta': params.get('min_delta', 0.0001),
+                    'verbose': False,  # 在优化期间保持简洁的输出
+                    'mode': 'min'
+                }
+
                 # 记录试验信息
                 trial_info = {
                     'trial_number': trial.number,
@@ -77,8 +86,17 @@ class OptunaSVRTransformerOptimizer:
                     transformer_params={k: v for k, v in params.items()
                                         if k in ['d_model', 'nhead', 'num_layers', 'dim_feedforward']},
                     svr_params={k: v for k, v in params.items()
-                                if k in ['kernel', 'C', 'epsilon', 'gamma', 'degree']}
+                                if k in ['kernel', 'C', 'epsilon', 'gamma', 'degree']},
+                    early_stopping_config=early_stopping_config
                 )
+
+                # 设置用于Optuna修剪的回调
+                def optuna_pruning_callback(epoch, train_loss, val_loss, lr, params):
+                    if val_loss is not None:
+                        # 报告中间值以支持修剪
+                        trial.report(val_loss, epoch)
+                        if trial.should_prune():
+                            raise optuna.exceptions.TrialPruned()
 
                 # 执行交叉验证
                 if self.cv_method == 'spatial':
@@ -96,7 +114,7 @@ class OptunaSVRTransformerOptimizer:
                     y_train, y_test = y[train_idx], y[test_idx]
 
                     print(f"  训练折 {fold_idx + 1}/{self.cv}...")
-                    model.fit(X_train, y_train)
+                    model.fit(X_train, y_train, X_test, y_test, callback=optuna_pruning_callback)
 
                     print(f"  评估折 {fold_idx + 1}/{self.cv}...")
                     y_pred = model.predict(X_test)
@@ -229,6 +247,18 @@ class OptunaSVRTransformerOptimizer:
         if params.get('kernel') == 'poly' and 'degree' in self.search_space:
             params['degree'] = trial.suggest_int(
                 'degree', *self.search_space['degree'])
+
+        # 早停参数
+        if 'early_stopping' in self.search_space and self.search_space['early_stopping'].get('optimize', False):
+            es_config = self.search_space['early_stopping']
+
+            if 'patience' in es_config:
+                params['patience'] = trial.suggest_int(
+                    'patience', *es_config['patience'])
+
+            if 'min_delta' in es_config:
+                params['min_delta'] = trial.suggest_float(
+                    'min_delta', *es_config['min_delta'], log=True)
 
         return params
 

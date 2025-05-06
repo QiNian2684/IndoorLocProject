@@ -13,7 +13,8 @@ class SVRTransformerHybrid(PositioningModel):
     """SVR和Transformer的混合模型"""
 
     def __init__(self, integration_type='feature_extraction',
-                 transformer_params=None, svr_params=None, weights=None):
+                 transformer_params=None, svr_params=None, weights=None,
+                 early_stopping_config=None):
         """
         初始化SVR+Transformer混合模型
 
@@ -22,11 +23,13 @@ class SVRTransformerHybrid(PositioningModel):
             transformer_params (dict): Transformer模型参数
             svr_params (dict): SVR参数
             weights (dict): 用于ensemble集成的权重 {'svr': 0.5, 'transformer': 0.5}
+            early_stopping_config (dict): 早停配置参数
         """
         self.integration_type = integration_type
         self.transformer_params = transformer_params or {}
         self.svr_params = svr_params or {}
         self.weights = weights or {'svr': 0.5, 'transformer': 0.5}
+        self.early_stopping_config = early_stopping_config or {}
 
         # 初始化模型组件
         self.feature_extractor = None
@@ -115,6 +118,9 @@ class SVRTransformerHybrid(PositioningModel):
         """实现集成方法"""
         from datetime import datetime
 
+        # 导入早停机制
+        from utils.early_stopping import EarlyStopping
+
         # 训练SVR模型
         print(f"训练SVR模型...")
         self.svr_models = []
@@ -149,6 +155,16 @@ class SVRTransformerHybrid(PositioningModel):
         # 训练Transformer
         optimizer = optim.Adam(self.transformer_model.parameters(), lr=0.001)
         criterion = nn.MSELoss()
+
+        # 初始化早停机制
+        early_stopping = None
+        if hasattr(self, 'early_stopping_config') and self.early_stopping_config.get('enabled', False):
+            early_stopping = EarlyStopping(
+                patience=self.early_stopping_config.get('patience', 15),
+                min_delta=self.early_stopping_config.get('min_delta', 0.0001),
+                verbose=self.early_stopping_config.get('verbose', True),
+                mode=self.early_stopping_config.get('mode', 'min'),
+            )
 
         self.transformer_model.train()
         epochs = 100  # 可配置
@@ -199,11 +215,23 @@ class SVRTransformerHybrid(PositioningModel):
                 }
                 callback(epoch, avg_epoch_loss, val_loss, 0.001, current_params)
 
+            # 检查早停条件
+            if early_stopping and val_loss is not None:
+                if early_stopping(val_loss, self.transformer_model):
+                    print(f"早停触发，在第{epoch + 1}轮停止训练")
+                    # 加载最佳模型（如果保存了的话）
+                    if early_stopping.save_path:
+                        self.transformer_model.load_state_dict(torch.load(early_stopping.save_path))
+                    break
+
         return self
 
     def _fit_end2end(self, X, y, X_val=None, y_val=None, callback=None):
         """实现端到端混合模型"""
         from datetime import datetime
+
+        # 导入早停机制
+        from utils.early_stopping import EarlyStopping
 
         # 创建端到端模型
         self.end2end_model = SVRTransformerEnd2End(
@@ -230,6 +258,16 @@ class SVRTransformerHybrid(PositioningModel):
 
         # 训练模型
         optimizer = optim.Adam(self.end2end_model.parameters(), lr=0.001)
+
+        # 初始化早停机制
+        early_stopping = None
+        if hasattr(self, 'early_stopping_config') and self.early_stopping_config.get('enabled', False):
+            early_stopping = EarlyStopping(
+                patience=self.early_stopping_config.get('patience', 15),
+                min_delta=self.early_stopping_config.get('min_delta', 0.0001),
+                verbose=self.early_stopping_config.get('verbose', True),
+                mode=self.early_stopping_config.get('mode', 'min'),
+            )
 
         self.end2end_model.train()
         epochs = 100  # 可配置
@@ -279,6 +317,15 @@ class SVRTransformerHybrid(PositioningModel):
                                 for name, param in self.end2end_model.named_parameters()}
                 }
                 callback(epoch, avg_epoch_loss, val_loss, 0.001, current_params)
+
+            # 检查早停条件
+            if early_stopping and val_loss is not None:
+                if early_stopping(val_loss, self.end2end_model):
+                    print(f"早停触发，在第{epoch + 1}轮停止训练")
+                    # 加载最佳模型（如果保存了的话）
+                    if early_stopping.save_path:
+                        self.end2end_model.load_state_dict(torch.load(early_stopping.save_path))
+                    break
 
         return self
 
