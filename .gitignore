@@ -1,15 +1,6 @@
-# 忽略一切
 *
-
-# 递归忽略子目录时仍需保留目录结构
 !*/
-
-# 保留 Python 源码
 !*.py
-
-# 保留依赖清单
 !requirements*.txt
-
-# 保留顶层文档与本文件（可选）
 !README.md
 !.gitignore
