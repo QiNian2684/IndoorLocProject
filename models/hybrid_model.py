@@ -76,11 +76,16 @@ class SVRTransformerHybrid(PositioningModel):
         """实现特征提取集成"""
         from datetime import datetime
 
-        # 创建并初始化特征提取器
-        self.feature_extractor = TransformerFeatureExtractor(
-            input_dim=X.shape[1],
-            **self.transformer_params
-        ).to(self.device)
+        # Create a filtered copy of the parameters for the feature extractor
+        # Only include parameters that TransformerFeatureExtractor accepts
+        valid_params = ['input_dim', 'd_model', 'nhead', 'num_layers', 'dim_feedforward', 'dropout']
+        transformer_params = {k: v for k, v in self.transformer_params.items() if k in valid_params}
+
+        # Override with actual input dimension
+        transformer_params['input_dim'] = X.shape[1]
+
+        # Create the feature extractor with filtered parameters
+        self.feature_extractor = TransformerFeatureExtractor(**transformer_params)
 
         # 如果需要训练Transformer特征提取器
         # 这里略去Transformer训练代码，直接使用预训练模型

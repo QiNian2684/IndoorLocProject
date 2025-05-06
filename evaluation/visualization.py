@@ -5,7 +5,21 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.colors import Normalize
 import os
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.font_manager import FontProperties
 
+# 设置中文字体
+try:
+    # 尝试设置支持中文的字体
+    font_path = 'C:/Windows/Fonts/simhei.ttf'  # Windows系统中的黑体字体
+    font_prop = FontProperties(fname=font_path)
+    plt.rcParams['font.family'] = font_prop.get_name()
+    # 或者直接使用：
+    # plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体为黑体
+    plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像时负号'-'显示为方块的问题
+except:
+    print("警告：未能设置中文字体，图表中的中文可能无法正确显示")
 
 class PositioningVisualizer:
     """定位系统可视化工具"""
