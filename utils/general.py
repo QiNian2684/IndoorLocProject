@@ -12,10 +12,10 @@ import logging
 
 def set_seed(seed):
     """
-    ÉèÖÃËæ»úÖÖ×ÓÒÔÈ·±£¿ÉÖØÏÖĞÔ
+    è®¾ç½®éšæœºç§å­ä»¥ç¡®ä¿å¯é‡ç°æ€§
 
-    ²ÎÊı:
-        seed (int): Ëæ»úÖÖ×Ó
+    å‚æ•°:
+        seed (int): éšæœºç§å­
     """
     import random
     import numpy as np
@@ -28,63 +28,63 @@ def set_seed(seed):
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
 
-    # Ò»Ğ©¶îÍâµÄÉèÖÃ£¬ÒÔÈ·±£ÔÚ¶àÏß³Ì/GPU»·¾³ÖĞÒ²ÊÇÈ·¶¨ĞÔµÄ
+    # ä¸€äº›é¢å¤–çš„è®¾ç½®ï¼Œä»¥ç¡®ä¿åœ¨å¤šçº¿ç¨‹/GPUç¯å¢ƒä¸­ä¹Ÿæ˜¯ç¡®å®šæ€§çš„
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
 def get_device():
     """
-    »ñÈ¡¿ÉÓÃµÄ¼ÆËãÉè±¸
+    è·å–å¯ç”¨çš„è®¡ç®—è®¾å¤‡
 
-    ·µ»Ø:
-        torch.device: ¼ÆËãÉè±¸
+    è¿”å›:
+        torch.device: è®¡ç®—è®¾å¤‡
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     return device
 
 def format_time(seconds):
     """
-    ¸ñÊ½»¯Ê±¼ä
+    æ ¼å¼åŒ–æ—¶é—´
 
-    ²ÎÊı:
-        seconds (float): ÃëÊı
+    å‚æ•°:
+        seconds (float): ç§’æ•°
 
-    ·µ»Ø:
-        str: ¸ñÊ½»¯µÄÊ±¼ä×Ö·û´®
+    è¿”å›:
+        str: æ ¼å¼åŒ–çš„æ—¶é—´å­—ç¬¦ä¸²
     """
     if seconds < 60:
-        return f"{seconds:.2f}Ãë"
+        return f"{seconds:.2f}ç§’"
     elif seconds < 3600:
         minutes = seconds // 60
         seconds %= 60
-        return f"{int(minutes)}·Ö{seconds:.2f}Ãë"
+        return f"{int(minutes)}åˆ†{seconds:.2f}ç§’"
     else:
         hours = seconds // 3600
         seconds %= 3600
         minutes = seconds // 60
         seconds %= 60
-        return f"{int(hours)}Ê±{int(minutes)}·Ö{seconds:.2f}Ãë"
+        return f"{int(hours)}æ—¶{int(minutes)}åˆ†{seconds:.2f}ç§’"
 
 def save_results(results, filepath, overwrite=False):
     """
-    ±£´æ½á¹ûµ½ÎÄ¼ş
+    ä¿å­˜ç»“æœåˆ°æ–‡ä»¶
 
-    ²ÎÊı:
-        results: Òª±£´æµÄ½á¹û
-        filepath (str): ÎÄ¼şÂ·¾¶
-        overwrite (bool): ÊÇ·ñ¸²¸ÇÏÖÓĞÎÄ¼ş
+    å‚æ•°:
+        results: è¦ä¿å­˜çš„ç»“æœ
+        filepath (str): æ–‡ä»¶è·¯å¾„
+        overwrite (bool): æ˜¯å¦è¦†ç›–ç°æœ‰æ–‡ä»¶
     """
     if os.path.exists(filepath) and not overwrite:
-        raise FileExistsError(f"ÎÄ¼ş{filepath}ÒÑ´æÔÚ¡£ÉèÖÃoverwrite=TrueÒÔ¸²¸Ç¡£")
+        raise FileExistsError(f"æ–‡ä»¶{filepath}å·²å­˜åœ¨ã€‚è®¾ç½®overwrite=Trueä»¥è¦†ç›–ã€‚")
 
-    # ´´½¨Ä¿Â¼£¨Èç¹û²»´æÔÚ£©
+    # åˆ›å»ºç›®å½•ï¼ˆå¦‚æœä¸å­˜åœ¨ï¼‰
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-    # ¸ù¾İÎÄ¼şÀ©Õ¹ÃûÈ·¶¨±£´æ¸ñÊ½
+    # æ ¹æ®æ–‡ä»¶æ‰©å±•åç¡®å®šä¿å­˜æ ¼å¼
     _, ext = os.path.splitext(filepath)
 
     if ext.lower() == '.json':
-        # È·±£½á¹û¿ÉÒÔ±»JSONĞòÁĞ»¯
+        # ç¡®ä¿ç»“æœå¯ä»¥è¢«JSONåºåˆ—åŒ–
         class NumpyEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, np.ndarray):
@@ -111,40 +111,40 @@ def save_results(results, filepath, overwrite=False):
             pd.DataFrame(results).to_csv(filepath, index=False)
 
     else:
-        raise ValueError(f"²»Ö§³ÖµÄÎÄ¼ş¸ñÊ½: {ext}¡£ÇëÊ¹ÓÃ.json¡¢.pkl»ò.csv¡£")
+        raise ValueError(f"ä¸æ”¯æŒçš„æ–‡ä»¶æ ¼å¼: {ext}ã€‚è¯·ä½¿ç”¨.jsonã€.pklæˆ–.csvã€‚")
 
 def save_with_versioning(data, base_path, prefix="", extension=None):
     """
-    Ê¹ÓÃ°æ±¾¿ØÖÆ±£´æÎÄ¼ş£¬·ÀÖ¹¸²¸Ç
+    ä½¿ç”¨ç‰ˆæœ¬æ§åˆ¶ä¿å­˜æ–‡ä»¶ï¼Œé˜²æ­¢è¦†ç›–
 
-    ²ÎÊı:
-        data: Òª±£´æµÄÊı¾İ
-        base_path (str): »ù±¾ÎÄ¼şÂ·¾¶
-        prefix (str): ÎÄ¼şÃûÇ°×º
-        extension (str): ÎÄ¼şÀ©Õ¹Ãû£¨Èç¹ûÎªNone£¬ÔòÊ¹ÓÃbase_pathµÄÀ©Õ¹Ãû£©
+    å‚æ•°:
+        data: è¦ä¿å­˜çš„æ•°æ®
+        base_path (str): åŸºæœ¬æ–‡ä»¶è·¯å¾„
+        prefix (str): æ–‡ä»¶åå‰ç¼€
+        extension (str): æ–‡ä»¶æ‰©å±•åï¼ˆå¦‚æœä¸ºNoneï¼Œåˆ™ä½¿ç”¨base_pathçš„æ‰©å±•åï¼‰
 
-    ·µ»Ø:
-        str: ±£´æµÄÎÄ¼şÂ·¾¶
+    è¿”å›:
+        str: ä¿å­˜çš„æ–‡ä»¶è·¯å¾„
     """
     directory = os.path.dirname(base_path)
     basename = os.path.basename(base_path)
 
-    # ´¦ÀíÀ©Õ¹Ãû
+    # å¤„ç†æ‰©å±•å
     if extension is None:
         filename, ext = os.path.splitext(basename)
     else:
         filename = os.path.splitext(basename)[0]
         ext = extension if extension.startswith('.') else f'.{extension}'
 
-    # ²éÕÒÏÖÓĞ°æ±¾
+    # æŸ¥æ‰¾ç°æœ‰ç‰ˆæœ¬
     pattern = os.path.join(directory, f"{prefix}{filename}_v*{ext}")
     existing_files = glob.glob(pattern)
 
-    # È·¶¨ĞÂ°æ±¾ºÅ
+    # ç¡®å®šæ–°ç‰ˆæœ¬å·
     if not existing_files:
         version = 1
     else:
-        # ´ÓÏÖÓĞÎÄ¼şÃûÖĞÌáÈ¡°æ±¾ºÅ
+        # ä»ç°æœ‰æ–‡ä»¶åä¸­æå–ç‰ˆæœ¬å·
         versions = []
         for f in existing_files:
             try:
@@ -154,24 +154,24 @@ def save_with_versioning(data, base_path, prefix="", extension=None):
                 continue
         version = max(versions) + 1 if versions else 1
 
-    # ´´½¨´ø°æ±¾µÄÂ·¾¶
+    # åˆ›å»ºå¸¦ç‰ˆæœ¬çš„è·¯å¾„
     versioned_path = os.path.join(directory, f"{prefix}{filename}_v{version}{ext}")
 
-    # ±£´æ½á¹û
+    # ä¿å­˜ç»“æœ
     save_results(data, versioned_path)
 
     return versioned_path
 
 def create_experiment_dir(base_dir='./experiments', experiment_name=None):
     """
-    ´´½¨´øÓĞÊ±¼ä±àÂëµÄÊµÑéÄ¿Â¼
+    åˆ›å»ºå¸¦æœ‰æ—¶é—´ç¼–ç çš„å®éªŒç›®å½•
 
-    ²ÎÊı:
-        base_dir (str): »ù´¡Ä¿Â¼
-        experiment_name (str, optional): ÊµÑéÃû³Æ
+    å‚æ•°:
+        base_dir (str): åŸºç¡€ç›®å½•
+        experiment_name (str, optional): å®éªŒåç§°
 
-    ·µ»Ø:
-        str: ÊµÑéÄ¿Â¼Â·¾¶
+    è¿”å›:
+        str: å®éªŒç›®å½•è·¯å¾„
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
@@ -180,76 +180,76 @@ def create_experiment_dir(base_dir='./experiments', experiment_name=None):
     else:
         exp_dir = os.path.join(base_dir, f'experiment_{timestamp}')
 
-    # ´´½¨Ö÷Ä¿Â¼
+    # åˆ›å»ºä¸»ç›®å½•
     os.makedirs(exp_dir, exist_ok=True)
 
-    # ´´½¨ÏêÏ¸×ÓÄ¿Â¼½á¹¹
+    # åˆ›å»ºè¯¦ç»†å­ç›®å½•ç»“æ„
     detailed_subdirs = {
         'models': {
-            'checkpoints': 'Ä£ĞÍ¼ì²éµã£¬°´ÂÖ´Î±£´æ',
-            'final': '×îÖÕÑµÁ·µÄÄ£ĞÍ',
-            'best': 'ĞÔÄÜ×îÓÅµÄÄ£ĞÍ'
+            'checkpoints': 'æ¨¡å‹æ£€æŸ¥ç‚¹ï¼ŒæŒ‰è½®æ¬¡ä¿å­˜',
+            'final': 'æœ€ç»ˆè®­ç»ƒçš„æ¨¡å‹',
+            'best': 'æ€§èƒ½æœ€ä¼˜çš„æ¨¡å‹'
         },
         'results': {
-            'raw': 'Ô­Ê¼ÆÀ¹À½á¹û',
-            'processed': '´¦ÀíºóµÄÆÀ¹ÀÖ¸±ê',
-            'comparisons': 'Ä£ĞÍ±È½Ï½á¹û'
+            'raw': 'åŸå§‹è¯„ä¼°ç»“æœ',
+            'processed': 'å¤„ç†åçš„è¯„ä¼°æŒ‡æ ‡',
+            'comparisons': 'æ¨¡å‹æ¯”è¾ƒç»“æœ'
         },
         'logs': {
-            'training': 'ÑµÁ·ÈÕÖ¾',
-            'evaluation': 'ÆÀ¹ÀÈÕÖ¾',
-            'optimization': '³¬²ÎÊıÓÅ»¯ÈÕÖ¾'
+            'training': 'è®­ç»ƒæ—¥å¿—',
+            'evaluation': 'è¯„ä¼°æ—¥å¿—',
+            'optimization': 'è¶…å‚æ•°ä¼˜åŒ–æ—¥å¿—'
         },
         'visualizations': {
-            'training': 'ÑµÁ·¿ÉÊÓ»¯Í¼±í',
-            'error_analysis': 'Îó²î·ÖÎöÍ¼±í',
-            'distribution': 'Êı¾İ·Ö²¼Í¼±í',
-            'comparisons': 'Ä£ĞÍ±È½ÏÍ¼±í'
+            'training': 'è®­ç»ƒå¯è§†åŒ–å›¾è¡¨',
+            'error_analysis': 'è¯¯å·®åˆ†æå›¾è¡¨',
+            'distribution': 'æ•°æ®åˆ†å¸ƒå›¾è¡¨',
+            'comparisons': 'æ¨¡å‹æ¯”è¾ƒå›¾è¡¨'
         },
         'csv_records': {
-            'training': 'ÑµÁ·¼ÇÂ¼',
-            'evaluation': 'ÆÀ¹À¼ÇÂ¼',
-            'optimization': 'ÓÅ»¯¼ÇÂ¼'
+            'training': 'è®­ç»ƒè®°å½•',
+            'evaluation': 'è¯„ä¼°è®°å½•',
+            'optimization': 'ä¼˜åŒ–è®°å½•'
         },
         'metrics': {
-            'by_epoch': '°´ÂÖ´Î¼ÇÂ¼µÄÖ¸±ê',
-            'by_model': '°´Ä£ĞÍ¼ÇÂ¼µÄÖ¸±ê',
-            'by_config': '°´ÅäÖÃ¼ÇÂ¼µÄÖ¸±ê'
+            'by_epoch': 'æŒ‰è½®æ¬¡è®°å½•çš„æŒ‡æ ‡',
+            'by_model': 'æŒ‰æ¨¡å‹è®°å½•çš„æŒ‡æ ‡',
+            'by_config': 'æŒ‰é…ç½®è®°å½•çš„æŒ‡æ ‡'
         },
         'predictions': {
-            'by_epoch': '°´ÂÖ´Î¼ÇÂ¼µÄÔ¤²â',
-            'final': '×îÖÕÄ£ĞÍµÄÔ¤²â',
-            'best': '×î¼ÑÄ£ĞÍµÄÔ¤²â'
+            'by_epoch': 'æŒ‰è½®æ¬¡è®°å½•çš„é¢„æµ‹',
+            'final': 'æœ€ç»ˆæ¨¡å‹çš„é¢„æµ‹',
+            'best': 'æœ€ä½³æ¨¡å‹çš„é¢„æµ‹'
         },
         'optuna_results': {
-            'trials': 'ÓÅ»¯ÊÔÑé½á¹û',
-            'visualizations': 'ÓÅ»¯¿ÉÊÓ»¯',
-            'best_params': '×î¼Ñ²ÎÊı¼ÇÂ¼'
+            'trials': 'ä¼˜åŒ–è¯•éªŒç»“æœ',
+            'visualizations': 'ä¼˜åŒ–å¯è§†åŒ–',
+            'best_params': 'æœ€ä½³å‚æ•°è®°å½•'
         },
         'configs': {
-            'original': 'Ô­Ê¼ÅäÖÃ',
-            'optimized': 'ÓÅ»¯ºóµÄÅäÖÃ',
-            'by_run': 'Ã¿´ÎÔËĞĞµÄÅäÖÃ'
+            'original': 'åŸå§‹é…ç½®',
+            'optimized': 'ä¼˜åŒ–åçš„é…ç½®',
+            'by_run': 'æ¯æ¬¡è¿è¡Œçš„é…ç½®'
         }
     }
 
-    # ´´½¨ÏêÏ¸Ä¿Â¼½á¹¹
+    # åˆ›å»ºè¯¦ç»†ç›®å½•ç»“æ„
     for main_dir, subdirs in detailed_subdirs.items():
         for subdir, description in subdirs.items():
             full_path = os.path.join(exp_dir, main_dir, subdir)
             os.makedirs(full_path, exist_ok=True)
 
-            # ÔÚÃ¿¸öÄ¿Â¼ÖĞ´´½¨README£¬½âÊÍÆäÓÃÍ¾
+            # åœ¨æ¯ä¸ªç›®å½•ä¸­åˆ›å»ºREADMEï¼Œè§£é‡Šå…¶ç”¨é€”
             with open(os.path.join(full_path, "README.md"), "w") as f:
                 f.write(f"# {subdir.replace('_', ' ').title()}\n\n")
                 f.write(f"{description}\n")
 
-    # ´´½¨READMEÎÄ¼ş
+    # åˆ›å»ºREADMEæ–‡ä»¶
     readme_path = os.path.join(exp_dir, 'README.md')
     with open(readme_path, 'w') as f:
-        f.write(f"# ÊµÑé£º{experiment_name or 'Default'}\n\n")
-        f.write(f"¿ªÊ¼Ê±¼ä: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        f.write("## Ä¿Â¼½á¹¹\n\n")
+        f.write(f"# å®éªŒï¼š{experiment_name or 'Default'}\n\n")
+        f.write(f"å¼€å§‹æ—¶é—´: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write("## ç›®å½•ç»“æ„\n\n")
         for main_dir, subdirs in detailed_subdirs.items():
             f.write(f"### `{main_dir}/`\n\n")
             for subdir, description in subdirs.items():
@@ -260,17 +260,17 @@ def create_experiment_dir(base_dir='./experiments', experiment_name=None):
 
 def create_results_dict(model, train_time, eval_metrics, config, additional_info=None):
     """
-    ´´½¨±ê×¼½á¹û×Öµä
+    åˆ›å»ºæ ‡å‡†ç»“æœå­—å…¸
 
-    ²ÎÊı:
-        model: ÑµÁ·ºÃµÄÄ£ĞÍ
-        train_time (float): ÑµÁ·Ê±¼ä£¨Ãë£©
-        eval_metrics (dict): ÆÀ¹ÀÖ¸±ê
-        config (dict): Ê¹ÓÃµÄÅäÖÃ
-        additional_info (dict): ¸½¼ÓĞÅÏ¢
+    å‚æ•°:
+        model: è®­ç»ƒå¥½çš„æ¨¡å‹
+        train_time (float): è®­ç»ƒæ—¶é—´ï¼ˆç§’ï¼‰
+        eval_metrics (dict): è¯„ä¼°æŒ‡æ ‡
+        config (dict): ä½¿ç”¨çš„é…ç½®
+        additional_info (dict): é™„åŠ ä¿¡æ¯
 
-    ·µ»Ø:
-        dict: ½á¹û×Öµä
+    è¿”å›:
+        dict: ç»“æœå­—å…¸
     """
     results = {
         'model_type': model.__class__.__name__,
@@ -288,43 +288,43 @@ def create_results_dict(model, train_time, eval_metrics, config, additional_info
 
 def setup_logger(name, log_dir, level='INFO'):
     """
-    ÉèÖÃÈÕÖ¾¼ÇÂ¼Æ÷
+    è®¾ç½®æ—¥å¿—è®°å½•å™¨
 
-    ²ÎÊı:
-        name (str): ÈÕÖ¾¼ÇÂ¼Æ÷Ãû³Æ
-        log_dir (str): ÈÕÖ¾Ä¿Â¼
-        level (str): ÈÕÖ¾¼¶±ğ
+    å‚æ•°:
+        name (str): æ—¥å¿—è®°å½•å™¨åç§°
+        log_dir (str): æ—¥å¿—ç›®å½•
+        level (str): æ—¥å¿—çº§åˆ«
 
-    ·µ»Ø:
-        logging.Logger: ÈÕÖ¾¼ÇÂ¼Æ÷
+    è¿”å›:
+        logging.Logger: æ—¥å¿—è®°å½•å™¨
     """
-    # ´´½¨ÈÕÖ¾Ä¿Â¼
+    # åˆ›å»ºæ—¥å¿—ç›®å½•
     os.makedirs(log_dir, exist_ok=True)
 
-    # ´´½¨ÈÕÖ¾¼ÇÂ¼Æ÷
+    # åˆ›å»ºæ—¥å¿—è®°å½•å™¨
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level))
 
-    # Çå³ıÒÑÓĞµÄ´¦ÀíÆ÷
+    # æ¸…é™¤å·²æœ‰çš„å¤„ç†å™¨
     if logger.handlers:
         logger.handlers.clear()
 
-    # ´´½¨ÎÄ¼ş´¦ÀíÆ÷
-    # Ìí¼ÓÊ±¼ä´Áµ½ÈÕÖ¾ÎÄ¼şÃû£¬È·±£Ã¿´ÎÔËĞĞ´´½¨ĞÂÎÄ¼ş
+    # åˆ›å»ºæ–‡ä»¶å¤„ç†å™¨
+    # æ·»åŠ æ—¶é—´æˆ³åˆ°æ—¥å¿—æ–‡ä»¶åï¼Œç¡®ä¿æ¯æ¬¡è¿è¡Œåˆ›å»ºæ–°æ–‡ä»¶
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     file_handler = logging.FileHandler(os.path.join(log_dir, f'{name}_{timestamp}.log'))
     file_handler.setLevel(getattr(logging, level))
 
-    # ´´½¨¿ØÖÆÌ¨´¦ÀíÆ÷
+    # åˆ›å»ºæ§åˆ¶å°å¤„ç†å™¨
     console_handler = logging.StreamHandler()
     console_handler.setLevel(getattr(logging, level))
 
-    # ´´½¨¸ñÊ½Æ÷
+    # åˆ›å»ºæ ¼å¼å™¨
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
 
-    # Ìí¼Ó´¦ÀíÆ÷
+    # æ·»åŠ å¤„ç†å™¨
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
@@ -332,22 +332,22 @@ def setup_logger(name, log_dir, level='INFO'):
 
 def save_best_model(model, metrics, exp_dir, metric_name='mean_error', minimize=True):
     """
-    ±£´æ×î¼ÑÄ£ĞÍ£¬»ùÓÚÖ¸¶¨Ö¸±ê£¬²»¸²¸ÇÏÈÇ°µÄÄ£ĞÍ
+    ä¿å­˜æœ€ä½³æ¨¡å‹ï¼ŒåŸºäºæŒ‡å®šæŒ‡æ ‡ï¼Œä¸è¦†ç›–å…ˆå‰çš„æ¨¡å‹
 
-    ²ÎÊı:
-        model: Òª¿ÉÄÜ±£´æµÄÄ£ĞÍ
-        metrics: ÆÀ¹ÀÖ¸±ê×Öµä
-        exp_dir: ÊµÑéÄ¿Â¼
-        metric_name: ÓÃÓÚ±È½ÏµÄÖ¸±êÃû³Æ
-        minimize: ¸ÃÖ¸±êÊÇ·ñÔ½Ğ¡Ô½ºÃ
+    å‚æ•°:
+        model: è¦å¯èƒ½ä¿å­˜çš„æ¨¡å‹
+        metrics: è¯„ä¼°æŒ‡æ ‡å­—å…¸
+        exp_dir: å®éªŒç›®å½•
+        metric_name: ç”¨äºæ¯”è¾ƒçš„æŒ‡æ ‡åç§°
+        minimize: è¯¥æŒ‡æ ‡æ˜¯å¦è¶Šå°è¶Šå¥½
 
-    ·µ»Ø:
-        (bool, str): ÊÇ·ñÎªĞÂµÄ×î¼ÑÄ£ĞÍ£¬±£´æµÄÄ£ĞÍÂ·¾¶
+    è¿”å›:
+        (bool, str): æ˜¯å¦ä¸ºæ–°çš„æœ€ä½³æ¨¡å‹ï¼Œä¿å­˜çš„æ¨¡å‹è·¯å¾„
     """
-    # ´´½¨×î¼ÑÄ£ĞÍÔªÊı¾İÂ·¾¶
+    # åˆ›å»ºæœ€ä½³æ¨¡å‹å…ƒæ•°æ®è·¯å¾„
     best_model_meta_path = os.path.join(exp_dir, 'results', 'raw', 'best_model_meta.json')
 
-    # ¼ì²éÊÇ·ñÖ®Ç°±£´æ¹ı"×î¼Ñ"Ä£ĞÍ
+    # æ£€æŸ¥æ˜¯å¦ä¹‹å‰ä¿å­˜è¿‡"æœ€ä½³"æ¨¡å‹
     current_best_value = float('inf') if minimize else float('-inf')
     if os.path.exists(best_model_meta_path):
         try:
@@ -355,19 +355,19 @@ def save_best_model(model, metrics, exp_dir, metric_name='mean_error', minimize=
                 best_meta = json.load(f)
                 current_best_value = best_meta.get('metric_value', current_best_value)
         except (json.JSONDecodeError, FileNotFoundError):
-            # Èç¹ûÎÄ¼şËğ»µ»ò²»´æÔÚ£¬¼ÌĞøÊ¹ÓÃÄ¬ÈÏÖµ
+            # å¦‚æœæ–‡ä»¶æŸåæˆ–ä¸å­˜åœ¨ï¼Œç»§ç»­ä½¿ç”¨é»˜è®¤å€¼
             pass
 
-    # µ±Ç°Ä£ĞÍÔÚÖ¸¶¨Ö¸±êÉÏµÄÖµ
+    # å½“å‰æ¨¡å‹åœ¨æŒ‡å®šæŒ‡æ ‡ä¸Šçš„å€¼
     current_value = metrics.get(metric_name)
 
-    # È·¶¨µ±Ç°Ä£ĞÍÊÇ·ñ¸üºÃ
+    # ç¡®å®šå½“å‰æ¨¡å‹æ˜¯å¦æ›´å¥½
     is_better = False
     if current_value is not None:
         is_better = current_value < current_best_value if minimize else current_value > current_best_value
 
     if is_better:
-        # Ê¹ÓÃÊ±¼ä´Á±£´æÄ£ĞÍ£¬±ÜÃâÈÎºÎ¿ÉÄÜµÄ³åÍ»
+        # ä½¿ç”¨æ—¶é—´æˆ³ä¿å­˜æ¨¡å‹ï¼Œé¿å…ä»»ä½•å¯èƒ½çš„å†²çª
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         best_model_dir = os.path.join(exp_dir, 'models', 'best')
         os.makedirs(best_model_dir, exist_ok=True)
@@ -375,7 +375,7 @@ def save_best_model(model, metrics, exp_dir, metric_name='mean_error', minimize=
         model_path = os.path.join(best_model_dir, f'best_model_{timestamp}.pkl')
         model.save_model(model_path)
 
-        # ¸üĞÂ×î¼ÑÄ£ĞÍÔªÊı¾İ
+        # æ›´æ–°æœ€ä½³æ¨¡å‹å…ƒæ•°æ®
         best_meta = {
             'model_path': model_path,
             'metric_name': metric_name,
@@ -384,29 +384,29 @@ def save_best_model(model, metrics, exp_dir, metric_name='mean_error', minimize=
             'metrics': metrics
         }
 
-        # ±£´æÔªÊı¾İ
+        # ä¿å­˜å…ƒæ•°æ®
         meta_dir = os.path.join(exp_dir, 'results', 'raw')
         os.makedirs(meta_dir, exist_ok=True)
 
         with open(best_model_meta_path, 'w') as f:
             json.dump(best_meta, f, indent=4)
 
-        # ´´½¨Ö¸Ïò"current_best.pkl"µÄ·ûºÅÁ´½Ó»ò¸±±¾£¬ÒÔ±ãÓÚÒıÓÃ
+        # åˆ›å»ºæŒ‡å‘"current_best.pkl"çš„ç¬¦å·é“¾æ¥æˆ–å‰¯æœ¬ï¼Œä»¥ä¾¿äºå¼•ç”¨
         current_best_path = os.path.join(best_model_dir, 'current_best.pkl')
         if os.path.exists(current_best_path):
             os.remove(current_best_path)
 
-        # ÔÚWindowsÉÏ£¬¸´ÖÆ±È´´½¨·ûºÅÁ´½Ó¸ü¿É¿¿
+        # åœ¨Windowsä¸Šï¼Œå¤åˆ¶æ¯”åˆ›å»ºç¬¦å·é“¾æ¥æ›´å¯é 
         shutil.copy2(model_path, current_best_path)
 
-        # ±£´æ¼òÒªËµÃ÷ÎÄ¼ş
+        # ä¿å­˜ç®€è¦è¯´æ˜æ–‡ä»¶
         with open(os.path.join(best_model_dir, f'best_model_{timestamp}_info.txt'), 'w') as f:
-            f.write(f"Ä£ĞÍ±£´æÊ±¼ä: {timestamp}\n")
-            f.write(f"ÆÀ¹ÀÖ¸±ê ({metric_name}): {current_value}\n")
-            f.write(f"ÏÈÇ°×î¼ÑÖµ: {current_best_value}\n")
+            f.write(f"æ¨¡å‹ä¿å­˜æ—¶é—´: {timestamp}\n")
+            f.write(f"è¯„ä¼°æŒ‡æ ‡ ({metric_name}): {current_value}\n")
+            f.write(f"å…ˆå‰æœ€ä½³å€¼: {current_best_value}\n")
             f.write(
-                f"¸Ä½ø: {abs(current_best_value - current_value):.6f} ({abs(current_best_value - current_value) / abs(current_best_value) * 100 if current_best_value != 0 else 100:.2f}%)\n")
-            f.write("\nÏêÏ¸Ö¸±ê:\n")
+                f"æ”¹è¿›: {abs(current_best_value - current_value):.6f} ({abs(current_best_value - current_value) / abs(current_best_value) * 100 if current_best_value != 0 else 100:.2f}%)\n")
+            f.write("\nè¯¦ç»†æŒ‡æ ‡:\n")
             for k, v in metrics.items():
                 if isinstance(v, (int, float)):
                     f.write(f"- {k}: {v}\n")
