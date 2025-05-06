@@ -166,8 +166,17 @@ def train_and_evaluate(config=None):
                                     level=config['logging']['log_level'])
         optim_logger.info(f"开始超参数优化: {config['optimization']['n_trials']}次试验")
 
-        # 运行优化
-        best_params = optimizer.optimize(X_train, y_train_coords)
+        # 需要传入额外的楼层数据
+        # 提取楼层标签
+        X_floor = y_train_floor
+
+        # 运行优化 - 修改参数传递，包含楼层数据
+        # 需要传入额外的楼层数据
+        # 提取楼层标签
+        X_floor = y_train_floor  # 使用训练集的楼层标签
+
+        # 运行优化 - 修改参数传递，包含楼层数据
+        best_params = optimizer.optimize(X_train, y_train_coords, X_floor)
         logger.info(f"最佳参数: {best_params}")
         optim_logger.info(f"优化完成，最佳参数: {best_params}")
 
@@ -206,6 +215,18 @@ def train_and_evaluate(config=None):
             config_updates['model']['svr'] = config_updates['model'].get('svr', {})
             config_updates['model']['svr'].update(svr_params)
 
+        # 新增：更新楼层分类器参数
+        floor_params = {k.replace('floor_', ''): v for k, v in best_params.items()
+                        if k.startswith('floor_')}
+        if floor_params:
+            config_updates['model'] = config_updates.get('model', {})
+            config_updates['model']['floor_classifier'] = config_updates['model'].get('floor_classifier', {})
+            config_updates['model']['floor_classifier'].update(floor_params)
+
+            # 特别处理分类器类型参数
+            if 'classifier_type' in floor_params:
+                config_updates['model']['floor_classifier']['type'] = floor_params.pop('classifier_type')
+
         # 应用更新
         config = update_config(config_updates)
 
@@ -216,14 +237,21 @@ def train_and_evaluate(config=None):
         save_results(config, updated_config_path)
         logger.info(f"更新后的配置已保存到: {updated_config_path}")
 
-    # 训练楼层分类器
+    # 现在使用优化后的参数创建楼层分类器
     logger.info("正在训练楼层分类器...")
-    floor_classifier = FloorClassifier(classifier_type=config['model']['floor_classifier']['type'],
-                                       n_estimators=config['model']['floor_classifier']['n_estimators'],
-                                       random_state=config['random_state'])
-    floor_classifier.fit(X_train, y_train_floor)
+    floor_classifier = FloorClassifier(
+        classifier_type=config['model']['floor_classifier']['type'],
+        n_estimators=config['model']['floor_classifier']['n_estimators'],
+        max_depth=config['model']['floor_classifier'].get('max_depth', None),
+        min_samples_split=config['model']['floor_classifier'].get('min_samples_split', 2),
+        min_samples_leaf=config['model']['floor_classifier'].get('min_samples_leaf', 1),
+        random_state=config['random_state']
+    )
 
-    # 评估楼层分类器
+    # 首先训练楼层分类器
+    floor_classifier.fit(X_train, y_train_floor)  # 添加这一行来训练分类器
+
+    # 再评估楼层分类器
     floor_pred_train = floor_classifier.predict(X_train)
     floor_pred_val = floor_classifier.predict(X_val)
 

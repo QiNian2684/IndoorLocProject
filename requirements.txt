@@ -9,3 +9,4 @@ joblib>=1.0.0
 tqdm>=4.50.0
 plotly>=5.0.0
 python-kaleido # 用于Plotly图形保存
+xgboost

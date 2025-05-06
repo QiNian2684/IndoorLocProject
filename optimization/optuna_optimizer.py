@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from models.hybrid_model import SVRTransformerHybrid
 from evaluation.cross_validation import SpatialCrossValidator
-
+from models.floor_model import FloorClassifier  # 添加这一行在optuna_optimizer.py顶部
 
 class OptunaSVRTransformerOptimizer:
     """使用Optuna优化SVR+Transformer超参数"""
@@ -37,13 +37,14 @@ class OptunaSVRTransformerOptimizer:
         self.best_params = None
         self.trial_history = []
 
-    def optimize(self, X, y, custom_objective=None):
+    def optimize(self, X, y, X_floor=None, custom_objective=None):
         """
         运行超参数优化
 
         参数:
             X: 特征数据
-            y: 目标值
+            y: 目标值（坐标）
+            X_floor: 楼层标签数据（可选）
             custom_objective: 可选的自定义目标函数
 
         返回:
@@ -80,7 +81,16 @@ class OptunaSVRTransformerOptimizer:
                 print(f"\n==== 试验 {trial.number + 1}/{self.n_trials} ====")
                 print(f"参数: {params}")
 
-                # 创建模型
+                # 创建楼层分类器
+                floor_classifier = FloorClassifier(
+                    classifier_type=params.get('floor_classifier_type', 'random_forest'),
+                    n_estimators=params.get('floor_n_estimators', 100),
+                    max_depth=params.get('floor_max_depth', None),
+                    min_samples_split=params.get('floor_min_samples_split', 2),
+                    min_samples_leaf=params.get('floor_min_samples_leaf', 1)
+                )
+
+                # 创建主模型
                 model = SVRTransformerHybrid(
                     integration_type=params['integration_type'],
                     transformer_params={k: v for k, v in params.items()
@@ -104,7 +114,8 @@ class OptunaSVRTransformerOptimizer:
                 else:
                     cv_splitter = KFold(n_splits=self.cv, shuffle=True, random_state=42)
 
-                cv_scores = []
+                cv_coords_scores = []  # 坐标预测误差
+                cv_floor_scores = []  # 楼层预测准确率
                 fold_info = []
 
                 print(f"执行{self.cv}折交叉验证...")
@@ -113,51 +124,90 @@ class OptunaSVRTransformerOptimizer:
                     X_train, X_test = X[train_idx], X[test_idx]
                     y_train, y_test = y[train_idx], y[test_idx]
 
-                    print(f"  训练折 {fold_idx + 1}/{self.cv}...")
+                    # 获取楼层标签 - 需要传入额外参数
+                    if hasattr(X, 'iloc'):
+                        y_train_floor = X.iloc[train_idx]['FLOOR'].values
+                        y_test_floor = X.iloc[test_idx]['FLOOR'].values
+                    else:
+                        # 使用传入的楼层数据
+                        y_train_floor = X_floor[train_idx] if X_floor is not None else None
+                        y_test_floor = X_floor[test_idx] if X_floor is not None else None
+
+                    print(f"  训练楼层分类器 折 {fold_idx + 1}/{self.cv}...")
+                    floor_classifier.fit(X_train, y_train_floor)
+
+                    print(f"  训练坐标回归模型 折 {fold_idx + 1}/{self.cv}...")
                     model.fit(X_train, y_train, X_test, y_test, callback=optuna_pruning_callback)
 
                     print(f"  评估折 {fold_idx + 1}/{self.cv}...")
+                    # 预测坐标
                     y_pred = model.predict(X_test)
 
-                    # 计算错误（欧氏距离）
-                    errors = np.sqrt(np.sum((y_test - y_pred) ** 2, axis=1))
-                    mean_error = np.mean(errors)
-                    cv_scores.append(mean_error)
+                    # 预测楼层
+                    floor_pred = floor_classifier.predict(X_test)
+
+                    # 计算坐标错误（欧氏距离）
+                    coords_errors = np.sqrt(np.sum((y_test - y_pred) ** 2, axis=1))
+                    mean_coords_error = np.mean(coords_errors)
+
+                    # 计算楼层准确率
+                    floor_accuracy = np.mean(y_test_floor == floor_pred)
+
+                    # 综合分数 - 坐标误差和楼层准确率的加权组合
+                    # 这里可以调整权重以平衡两个目标的重要性
+                    # 例如：综合分数 = 坐标误差 - 楼层准确率 * 权重
+                    # 权重越大，楼层准确率越重要
+                    floor_weight = 5.0  # 调整这个值来控制楼层分类的重要性
+                    combined_score = mean_coords_error - floor_accuracy * floor_weight
+
+                    cv_coords_scores.append(mean_coords_error)
+                    cv_floor_scores.append(floor_accuracy)
 
                     # 记录每折的信息
                     fold_info.append({
                         'fold': fold_idx,
                         'train_samples': len(X_train),
                         'test_samples': len(X_test),
-                        'mean_error': mean_error,
-                        'median_error': np.median(errors)
+                        'mean_coords_error': mean_coords_error,
+                        'floor_accuracy': floor_accuracy,
+                        'combined_score': combined_score
                     })
 
-                    print(f"  折 {fold_idx + 1} 平均误差: {mean_error:.4f}m")
+                    print(
+                        f"  折 {fold_idx + 1} 平均坐标误差: {mean_coords_error:.4f}m, 楼层准确率: {floor_accuracy:.4f}")
 
                     # 报告中间值以支持修剪
-                    trial.report(np.mean(cv_scores), fold_idx)
+                    trial.report(combined_score, fold_idx)
                     if trial.should_prune():
                         print(f"  提前修剪试验 {trial.number}...")
                         raise optuna.exceptions.TrialPruned()
 
                 # 计算平均分数和运行时间
-                mean_cv_score = np.mean(cv_scores)
+                mean_cv_coords_score = np.mean(cv_coords_scores)
+                mean_cv_floor_score = np.mean(cv_floor_scores)
+                # 计算综合分数
+                mean_combined_score = mean_cv_coords_score - mean_cv_floor_score * floor_weight
+
                 elapsed_time = time.time() - start_time
 
                 # 更新试验信息
                 trial_info.update({
-                    'mean_cv_score': mean_cv_score,
-                    'fold_scores': cv_scores,
-                    'fold_info': fold_info,
+                    'mean_cv_coords_score': mean_cv_coords_score,
+                    'mean_cv_floor_score': mean_cv_floor_score,
+                    'mean_combined_score': mean_combined_score,
+                    'fold_scores': fold_info,
                     'elapsed_time': elapsed_time
                 })
 
                 self.trial_history.append(trial_info)
 
-                print(f"试验 {trial.number + 1} 完成，平均误差: {mean_cv_score:.4f}m，用时: {elapsed_time:.2f}秒\n")
+                print(f"试验 {trial.number + 1} 完成，平均坐标误差: {mean_cv_coords_score:.4f}m，"
+                      f"楼层准确率: {mean_cv_floor_score:.4f}，"
+                      f"综合分数: {mean_combined_score:.4f}，"
+                      f"用时: {elapsed_time:.2f}秒\n")
 
-                return mean_cv_score
+                # 返回综合分数作为优化目标
+                return mean_combined_score
 
         # 创建和运行研究
         self.study = optuna.create_study(
@@ -220,11 +270,11 @@ class OptunaSVRTransformerOptimizer:
 
         if 'num_layers' in self.search_space:
             params['num_layers'] = trial.suggest_int(
-                'num_layers', *self.search_space['num_layers'])
+                'num_layers', self.search_space['num_layers'][0], self.search_space['num_layers'][1])
 
         if 'dim_feedforward' in self.search_space:
             params['dim_feedforward'] = trial.suggest_int(
-                'dim_feedforward', *self.search_space['dim_feedforward'])
+                'dim_feedforward', self.search_space['dim_feedforward'][0], self.search_space['dim_feedforward'][1])
 
         # SVR参数
         if 'kernel' in self.search_space:
@@ -233,11 +283,11 @@ class OptunaSVRTransformerOptimizer:
 
         if 'C' in self.search_space:
             params['C'] = trial.suggest_float(
-                'C', *self.search_space['C'], log=True)
+                'C', self.search_space['C'][0], self.search_space['C'][1], log=True)
 
         if 'epsilon' in self.search_space:
             params['epsilon'] = trial.suggest_float(
-                'epsilon', *self.search_space['epsilon'], log=True)
+                'epsilon', self.search_space['epsilon'][0], self.search_space['epsilon'][1], log=True)
 
         # 条件参数
         if params.get('kernel') in ['rbf', 'poly'] and 'gamma' in self.search_space:
@@ -246,7 +296,7 @@ class OptunaSVRTransformerOptimizer:
 
         if params.get('kernel') == 'poly' and 'degree' in self.search_space:
             params['degree'] = trial.suggest_int(
-                'degree', *self.search_space['degree'])
+                'degree', self.search_space['degree'][0], self.search_space['degree'][1])
 
         # 早停参数
         if 'early_stopping' in self.search_space and self.search_space['early_stopping'].get('optimize', False):
@@ -254,11 +304,46 @@ class OptunaSVRTransformerOptimizer:
 
             if 'patience' in es_config:
                 params['patience'] = trial.suggest_int(
-                    'patience', *es_config['patience'])
+                    'patience', es_config['patience'][0], es_config['patience'][1])
 
             if 'min_delta' in es_config:
                 params['min_delta'] = trial.suggest_float(
-                    'min_delta', *es_config['min_delta'], log=True)
+                    'min_delta', es_config['min_delta'][0], es_config['min_delta'][1], log=True)
+
+        # 楼层分类器参数
+        if 'floor_classifier_type' in self.search_space:
+            params['floor_classifier_type'] = trial.suggest_categorical(
+                'floor_classifier_type', self.search_space['floor_classifier_type'])
+
+        if 'floor_n_estimators' in self.search_space:
+            params['floor_n_estimators'] = trial.suggest_int(
+                'floor_n_estimators', self.search_space['floor_n_estimators'][0],
+                self.search_space['floor_n_estimators'][1])
+
+        if 'floor_max_depth' in self.search_space:
+            # 特殊处理None值
+            max_depth_options = self.search_space['floor_max_depth']
+            if None in max_depth_options:
+                # 先去除None，然后将其作为特殊选项
+                non_none_options = [opt for opt in max_depth_options if opt is not None]
+                if trial.suggest_categorical('floor_use_max_depth', [True, False]):
+                    params['floor_max_depth'] = trial.suggest_int(
+                        'floor_max_depth_value', min(non_none_options), max(non_none_options))
+                else:
+                    params['floor_max_depth'] = None
+            else:
+                params['floor_max_depth'] = trial.suggest_int(
+                    'floor_max_depth', min(max_depth_options), max(max_depth_options))
+
+        if 'floor_min_samples_split' in self.search_space:
+            params['floor_min_samples_split'] = trial.suggest_int(
+                'floor_min_samples_split', self.search_space['floor_min_samples_split'][0],
+                self.search_space['floor_min_samples_split'][1])
+
+        if 'floor_min_samples_leaf' in self.search_space:
+            params['floor_min_samples_leaf'] = trial.suggest_int(
+                'floor_min_samples_leaf', self.search_space['floor_min_samples_leaf'][0],
+                self.search_space['floor_min_samples_leaf'][1])
 
         return params
 

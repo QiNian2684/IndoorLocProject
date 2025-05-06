@@ -81,8 +81,17 @@ OPTIMIZATION_CONFIG = {
     'direction': 'minimize',
     'cv': 5,
     'cv_method': 'spatial',  # 'spatial', 'random', 'hierarchical'
-    'search_space': 'default'  # 'default', 'light', 'comprehensive', 'feature_extraction', 'ensemble', 'end2end'
+    'search_space': 'default'  # 'default', 'light', 'comprehensive', 'feature_extraction', 'ensemble', 'end2end' 
+
 }
+"""
+'default'：默认的超参数搜索空间，适用于一般优化任务，平衡搜索复杂度和性能。
+'light'：精简的超参数搜索空间，减少搜索范围和试验次数，适合快速实验或资源有限的场景。
+'comprehensive'：全面的超参数搜索空间，包含更多的参数组合，适合需要深度优化的场景，但会消耗更多的计算资源和时间。
+'feature_extraction'：专注于特征提取相关的超参数优化，例如 PCA 或其他降维技术。
+'ensemble'：针对集成方法的超参数优化，例如模型权重或组合策略。
+'end2end'：用于端到端模型的超参数优化，优化模型中所有组件的参数。
+"""
 
 # 评估配置
 EVALUATION_CONFIG = {
@@ -99,7 +108,7 @@ LOGGING_CONFIG = {
     'save_predictions': True,  # 保存详细预测结果
     'save_parameters': True,  # 保存模型参数
     'save_optuna_trials': True,  # 保存Optuna试验历史
-    'save_epoch_checkpoints': False,  # 是否保存每个轮次的模型检查点
+    'save_epoch_checkpoints': True,  # 是否保存每个轮次的模型检查点
     'checkpoint_frequency': 10,  # 保存检查点的频率（轮次）
     'csv_format': True,  # 是否以CSV格式保存结果
     'visualization_formats': ['png', 'pdf'],  # 可视化格式

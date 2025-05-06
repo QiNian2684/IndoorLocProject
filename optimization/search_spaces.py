@@ -26,7 +26,14 @@ DEFAULT_SEARCH_SPACE = {
     'C': [0.1, 100.0],
     'epsilon': [0.01, 1.0],
     'gamma': ['scale', 'auto'],
-    'degree': [2, 5]
+    'degree': [2, 5],
+
+    # 楼层分类器参数
+    'floor_classifier_type': ['random_forest', 'svm', 'xgboost'],
+    'floor_n_estimators': [50, 100, 200],
+    'floor_max_depth': [None, 10, 20, 30],
+    'floor_min_samples_split': [2, 5, 10],
+    'floor_min_samples_leaf': [1, 2, 4]
 }
 
 # 轻量级搜索空间 - 用于快速测试
@@ -39,7 +46,14 @@ LIGHT_SEARCH_SPACE = {
     'kernel': ['linear', 'rbf'],
     'C': [0.1, 10.0],
     'epsilon': [0.1, 0.5],
-    'gamma': ['scale']
+    'gamma': ['scale'],
+
+    # 楼层分类器参数 - 轻量版
+    'floor_classifier_type': ['random_forest', 'svm'],
+    'floor_n_estimators': [50, 100],
+    'floor_max_depth': [None, 20],
+    'floor_min_samples_split': [2, 5],
+    'floor_min_samples_leaf': [1, 2]
 }
 
 # 完整的搜索空间 - 用于详尽的超参数搜索
@@ -53,7 +67,14 @@ COMPREHENSIVE_SEARCH_SPACE = {
     'C': [0.01, 0.1, 1.0, 10.0, 100.0],
     'epsilon': [0.001, 0.01, 0.1, 0.5, 1.0],
     'gamma': ['scale', 'auto', 0.1, 1.0],
-    'degree': [2, 3, 4, 5]
+    'degree': [2, 3, 4, 5],
+
+    # 楼层分类器参数 - 完整版
+    'floor_classifier_type': ['random_forest', 'svm', 'xgboost'],
+    'floor_n_estimators': [50, 100, 150, 200, 300],
+    'floor_max_depth': [None, 10, 15, 20, 25, 30],
+    'floor_min_samples_split': [2, 3, 5, 8, 10],
+    'floor_min_samples_leaf': [1, 2, 3, 4, 5]
 }
 
 # 特征提取特定的搜索空间
@@ -67,7 +88,14 @@ FEATURE_EXTRACTION_SEARCH_SPACE = {
     'C': [0.1, 1.0, 10.0, 100.0],
     'epsilon': [0.01, 0.1, 0.5],
     'gamma': ['scale', 'auto'],
-    'degree': [2, 3]
+    'degree': [2, 3],
+
+    # 楼层分类器参数
+    'floor_classifier_type': ['random_forest', 'svm', 'xgboost'],
+    'floor_n_estimators': [50, 100, 200],
+    'floor_max_depth': [None, 15, 25],
+    'floor_min_samples_split': [2, 5, 10],
+    'floor_min_samples_leaf': [1, 2, 3]
 }
 
 # 集成特定的搜索空间
@@ -81,7 +109,14 @@ ENSEMBLE_SEARCH_SPACE = {
     'C': [0.1, 1.0, 10.0, 100.0],
     'epsilon': [0.01, 0.1, 0.5],
     'gamma': ['scale', 'auto'],
-    'degree': [2, 3]
+    'degree': [2, 3],
+
+    # 楼层分类器参数
+    'floor_classifier_type': ['random_forest', 'svm', 'xgboost'],
+    'floor_n_estimators': [50, 100, 200],
+    'floor_max_depth': [None, 15, 25],
+    'floor_min_samples_split': [2, 5, 10],
+    'floor_min_samples_leaf': [1, 2, 3]
 }
 
 # 端到端特定的搜索空间
@@ -92,7 +127,14 @@ END2END_SEARCH_SPACE = {
     'num_layers': [2, 4, 6],
     'dim_feedforward': [256, 512, 1024],
     'C': [0.1, 1.0, 10.0],
-    'epsilon': [0.01, 0.1, 0.5]
+    'epsilon': [0.01, 0.1, 0.5],
+
+    # 楼层分类器参数
+    'floor_classifier_type': ['random_forest', 'svm', 'xgboost'],
+    'floor_n_estimators': [50, 100, 200],
+    'floor_max_depth': [None, 15, 25],
+    'floor_min_samples_split': [2, 5, 10],
+    'floor_min_samples_leaf': [1, 2, 3]
 }
 
 

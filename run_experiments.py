@@ -11,12 +11,13 @@ import json
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import traceback  # 添加这一行导入traceback模块
+import traceback
 from datetime import datetime
 from config import get_config, update_config
 from main import train_and_evaluate
 from utils import create_experiment_dir, save_results, setup_logger, save_with_versioning
 import argparse
+
 def run_integration_type_experiments():
     """比较不同集成类型的实验"""
     base_config = get_config()
@@ -43,6 +44,16 @@ def run_integration_type_experiments():
                 }
             }
         })
+
+        # 确保配置包含楼层分类器参数
+        if 'floor_classifier' not in config['model']:
+            config['model']['floor_classifier'] = {
+                'type': 'random_forest',
+                'n_estimators': 100,
+                'max_depth': None,
+                'min_samples_split': 2,
+                'min_samples_leaf': 1
+            }
 
         # 使用时间戳，确保每次运行创建新的实验记录
         run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -176,6 +187,16 @@ def run_feedback_experiments():
             }
         })
 
+        # 确保配置包含楼层分类器参数
+        if 'floor_classifier' not in config['model']:
+            config['model']['floor_classifier'] = {
+                'type': 'random_forest',
+                'n_estimators': 100,
+                'max_depth': None,
+                'min_samples_split': 2,
+                'min_samples_leaf': 1
+            }
+
         # 使用时间戳，确保每次运行创建新的实验记录
         run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         logger.info(f"实验时间戳: {run_timestamp}")
@@ -304,6 +325,16 @@ def run_optimization_experiments():
             }
         })
 
+        # 确保配置包含楼层分类器参数
+        if 'floor_classifier' not in config['model']:
+            config['model']['floor_classifier'] = {
+                'type': 'random_forest',
+                'n_estimators': 100,
+                'max_depth': None,
+                'min_samples_split': 2,
+                'min_samples_leaf': 1
+            }
+
         # 使用时间戳，确保每次运行创建新的实验记录
         run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         logger.info(f"实验时间戳: {run_timestamp}")
@@ -387,6 +418,21 @@ def run_optimization_experiments():
     plt.savefig(comparison_fig_path)
     plt.close()
     logger.info(f"比较图表已保存到: {comparison_fig_path}")
+
+    # 添加楼层准确率和优化轮数的关系图
+    if any(acc is not None for acc in comparison['floor_accuracies']):
+        plt.figure(figsize=(10, 6))
+        plt.plot(comparison['n_trials_settings'], comparison['floor_accuracies'], 'o-')
+        plt.xlabel('优化试验次数')
+        plt.ylabel('楼层准确率')
+        plt.title('不同优化水平的楼层分类准确率')
+        plt.grid(True, linestyle='--', alpha=0.7)
+
+        # 保存楼层准确率对比图
+        floor_fig_path = os.path.join(comparison_fig_dir, f'optimization_floor_accuracy_{comparison_timestamp}.png')
+        plt.savefig(floor_fig_path)
+        plt.close()
+        logger.info(f"楼层准确率与优化轮数关系图已保存到: {floor_fig_path}")
 
     logger.info(f"\n==== 优化水平比较完成 ====")
 

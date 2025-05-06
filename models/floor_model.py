@@ -38,15 +38,34 @@ class FloorClassifier(PositioningModel):
         返回:
             self: 模型实例
         """
+        # 根据分类器类型过滤参数
+        filtered_params = {}
         if self.classifier_type == 'random_forest':
-            self.model = RandomForestClassifier(**self.params)
+            # 只保留随机森林相关参数
+            for key in ['n_estimators', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'random_state']:
+                if key in self.params:
+                    filtered_params[key] = self.params[key]
         elif self.classifier_type == 'svm':
-            self.model = SVC(**self.params)
+            # 只保留SVM相关参数
+            for key in ['C', 'kernel', 'gamma', 'degree', 'coef0', 'probability', 'random_state']:
+                if key in self.params:
+                    filtered_params[key] = self.params[key]
+        elif self.classifier_type == 'xgboost':
+            # 只保留XGBoost相关参数
+            for key in ['n_estimators', 'max_depth', 'learning_rate', 'subsample', 'colsample_bytree', 'random_state']:
+                if key in self.params:
+                    filtered_params[key] = self.params[key]
+
+        # 创建分类器
+        if self.classifier_type == 'random_forest':
+            self.model = RandomForestClassifier(**filtered_params)
+        elif self.classifier_type == 'svm':
+            self.model = SVC(**filtered_params)
         elif self.classifier_type == 'xgboost':
             if not HAS_XGBOOST:
                 raise ImportError("XGBoost not installed. Please install xgboost package.")
             from xgboost import XGBClassifier
-            self.model = XGBClassifier(**self.params)
+            self.model = XGBClassifier(**filtered_params)
         else:
             raise ValueError(f"不支持的分类器类型: {self.classifier_type}")
 

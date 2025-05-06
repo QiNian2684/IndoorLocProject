@@ -388,8 +388,8 @@ def save_best_model(model, metrics, exp_dir, metric_name='mean_error', minimize=
         meta_dir = os.path.join(exp_dir, 'results', 'raw')
         os.makedirs(meta_dir, exist_ok=True)
 
-        with open(best_model_meta_path, 'w') as f:
-            json.dump(best_meta, f, indent=4)
+        # Use save_results function which already handles NumPy arrays
+        save_results(best_meta, best_model_meta_path, overwrite=True)
 
         # 创建指向"current_best.pkl"的符号链接或副本，以便于引用
         current_best_path = os.path.join(best_model_dir, 'current_best.pkl')
