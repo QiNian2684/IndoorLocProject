@@ -3,18 +3,18 @@ import torch
 
 
 class EarlyStopping:
-    """ÔçÍ£»úÖÆ£¬¼à¿ØÑµÁ·¹ı³Ì£¬±ÜÃâ¹ıÄâºÏ"""
+    """æ—©åœæœºåˆ¶ï¼Œç›‘æ§è®­ç»ƒè¿‡ç¨‹ï¼Œé¿å…è¿‡æ‹Ÿåˆ"""
 
     def __init__(self, patience=10, min_delta=0, verbose=True, mode='min', save_path=None):
         """
-        ³õÊ¼»¯ÔçÍ£»úÖÆ
+        åˆå§‹åŒ–æ—©åœæœºåˆ¶
 
-        ²ÎÊı:
-            patience (int): ²»¸ÄÉÆµÄÂÖÊı£¬³¬¹ı´ËÖµÔòÍ£Ö¹ÑµÁ·
-            min_delta (float): ×îĞ¡¸ÄÉÆãĞÖµ£¬µÍÓÚ´ËÖµÊÓÎªÃ»ÓĞ¸ÄÉÆ
-            verbose (bool): ÊÇ·ñ´òÓ¡ÔçÍ£ĞÅÏ¢
-            mode (str): 'min'±íÊ¾¼à¿ØÖ¸±êÔ½Ğ¡Ô½ºÃ£¬'max'±íÊ¾Ô½´óÔ½ºÃ
-            save_path (str): ±£´æ×î¼ÑÄ£ĞÍµÄÂ·¾¶£¬Èç¹ûÎªNoneÔò²»±£´æ
+        å‚æ•°:
+            patience (int): ä¸æ”¹å–„çš„è½®æ•°ï¼Œè¶…è¿‡æ­¤å€¼åˆ™åœæ­¢è®­ç»ƒ
+            min_delta (float): æœ€å°æ”¹å–„é˜ˆå€¼ï¼Œä½äºæ­¤å€¼è§†ä¸ºæ²¡æœ‰æ”¹å–„
+            verbose (bool): æ˜¯å¦æ‰“å°æ—©åœä¿¡æ¯
+            mode (str): 'min'è¡¨ç¤ºç›‘æ§æŒ‡æ ‡è¶Šå°è¶Šå¥½ï¼Œ'max'è¡¨ç¤ºè¶Šå¤§è¶Šå¥½
+            save_path (str): ä¿å­˜æœ€ä½³æ¨¡å‹çš„è·¯å¾„ï¼Œå¦‚æœä¸ºNoneåˆ™ä¸ä¿å­˜
         """
         self.patience = patience
         self.min_delta = min_delta
@@ -29,14 +29,14 @@ class EarlyStopping:
 
     def __call__(self, val_loss, model=None):
         """
-        Ã¿ÂÖÑµÁ·ºóµ÷ÓÃ
+        æ¯è½®è®­ç»ƒåè°ƒç”¨
 
-        ²ÎÊı:
-            val_loss (float): ÑéÖ¤¼¯ÉÏµÄÖ¸±ê
-            model: µ±Ç°Ä£ĞÍ£¬ÓÃÓÚ±£´æ
+        å‚æ•°:
+            val_loss (float): éªŒè¯é›†ä¸Šçš„æŒ‡æ ‡
+            model: å½“å‰æ¨¡å‹ï¼Œç”¨äºä¿å­˜
 
-        ·µ»Ø:
-            bool: ÊÇ·ñÓ¦¸ÃÍ£Ö¹ÑµÁ·
+        è¿”å›:
+            bool: æ˜¯å¦åº”è¯¥åœæ­¢è®­ç»ƒ
         """
         score = -val_loss if self.mode == 'min' else val_loss
 
@@ -57,7 +57,7 @@ class EarlyStopping:
         return self.early_stop
 
     def save_checkpoint(self, val_loss, model):
-        """±£´æÄ£ĞÍ¼ì²éµã"""
+        """ä¿å­˜æ¨¡å‹æ£€æŸ¥ç‚¹"""
         if self.save_path is None or model is None:
             return
 
@@ -68,7 +68,7 @@ class EarlyStopping:
         if isinstance(model, torch.nn.Module):
             torch.save(model.state_dict(), self.save_path)
         else:
-            # ±£´æ·ÇPyTorchÄ£ĞÍ
+            # ä¿å­˜éPyTorchæ¨¡å‹
             try:
                 model.save_model(self.save_path)
             except:
