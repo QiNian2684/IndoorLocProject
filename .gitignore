@@ -1,6 +1,15 @@
+# 忽略全部
 *
+
+# 允许递归进入子目录
 !*/
-!*.py
-!requirements*.txt
+
+# 保留所有层级的 .py
+!**/*.py
+
+# 保留所有层级的 requirements*.txt
+!**/requirements*.txt
+
+# 可选：保留顶层文档
 !README.md
 !.gitignore
