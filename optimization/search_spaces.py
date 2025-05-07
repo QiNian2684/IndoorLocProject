@@ -192,8 +192,78 @@ END2END_SEARCH_SPACE = {
     'floor_min_samples_leaf': [1, 2, 3]         # 代表性的叶节点参数
 }
 
+#自己创建的搜索空间
+SELF_SEARCH_SPACE = {
+    # 集成类型 - 决定如何组合SVR和Transformer
+    'integration_type': ['feature_extraction', 'end2end'],
+                                     # 'feature_extraction': Transformer提取特征，SVR预测位置
+                                     # 'ensemble': 独立训练模型后加权组合结果
+                                     # 'end2end': 端到端训练的混合架构
 
-def get_search_space(space_type='default'):
+    # 早停参数 - 控制训练过程中的停止条件
+    'early_stopping': early_stopping_config,
+
+    # Transformer参数 - 深度学习模型的核心参数
+    'd_model': [16, 32, 64, 128],  # Transformer模型的隐藏维度
+                                     # 较大的值增加模型容量但需要更多计算资源
+                                     # 较小的值训练更快但可能限制性能
+
+    'nhead': [2, 4, 8, 16],          # 多头自注意力机制中的头数
+                                     # 需确保能被d_model整除
+                                     # 多头允许模型关注不同的特征子空间
+
+    'num_layers': [2, 20],            # Transformer编码器的层数
+                                     # 更多层可以学习更复杂的模式但更难训练
+
+    'dim_feedforward': [2, 512],  # 前馈网络隐藏层维度
+                                     # 控制每层Transformer的非线性变换能力
+
+    # SVR参数 - 支持向量回归模型的关键参数
+    'kernel': ['rbf'],  # 核函数类型
+                                          # 'linear': 线性关系，最简单，计算最快
+                                          # 'rbf': 径向基核，适用于非线性复杂关系
+                                          # 'poly': 多项式核，适用于特定非线性模式
+
+    'C': [0.1, 100.0],               # 正则化参数，控制误差的惩罚强度
+                                     # 较大值：更关注每个样本的拟合，可能过拟合
+                                     # 较小值：更关注一般模式，可能欠拟合
+
+    'epsilon': [0.01, 1.0],          # SVR的不敏感区域宽度
+                                     # 控制允许的预测误差，影响支持向量的数量
+                                     # 较小值要求更精确的拟合，较大值容忍更多误差
+
+    'gamma': ['scale', 'auto'],      # RBF核和多项式核的系数
+                                     # 'scale': 使用1/(n_features*X.var())
+                                     # 'auto': 使用1/n_features
+                                     # 控制核函数的影响范围
+
+    'degree': [2, 5],                # 多项式核函数的度数
+                                     # 仅当kernel='poly'时使用
+                                     # 更高的度数可以捕获更复杂的非线性关系
+
+    # 楼层分类器参数 - 用于预测用户所在楼层的分类模型参数
+    'floor_classifier_type': ['svm'],
+                                     # 分类器类型选择
+                                     # 'random_forest': 集成树模型，鲁棒性好
+                                     # 'svm': 支持向量机，适合复杂边界
+                                     # 'xgboost': 梯度提升树，通常性能最佳
+
+    'floor_n_estimators': [50, 100, 200],  # 随机森林或XGBoost中的树数量
+                                           # 更多树提高模型稳定性和性能，但增加计算成本
+
+    'floor_max_depth': [None, 10, 20, 30],  # 决策树的最大深度
+                                            # None表示无限制，让树生长到完全纯净的叶节点
+                                            # 较小的深度限制可以防止过拟合
+
+    'floor_min_samples_split': [2, 5, 10],  # 分裂内部节点所需的最小样本数
+                                            # 较大值可减少过拟合，较小值可提高拟合能力
+
+    'floor_min_samples_leaf': [1, 2, 4]     # 叶节点所需的最小样本数
+                                            # 较大值确保每个叶节点有足够样本，提高泛化能力
+}
+
+
+def get_search_space(space_type='self'):
     """
     获取指定类型的搜索空间
 
@@ -221,13 +291,16 @@ def get_search_space(space_type='default'):
         'comprehensive': COMPREHENSIVE_SEARCH_SPACE,
         'feature_extraction': FEATURE_EXTRACTION_SEARCH_SPACE,
         'ensemble': ENSEMBLE_SEARCH_SPACE,
-        'end2end': END2END_SEARCH_SPACE
+        'end2end': END2END_SEARCH_SPACE,
+        'self': SELF_SEARCH_SPACE
     }
 
     if space_type not in space_types:
         raise ValueError(f"未知的搜索空间类型: {space_type}")
 
     return space_types[space_type]
+
+
 
 # 确保其他搜索空间也包含早停配置
 # 为所有搜索空间添加相同的早停参数配置，使早停机制在所有优化场景中都可调整
