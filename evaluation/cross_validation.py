@@ -30,6 +30,15 @@ class SpatialCrossValidator:
         生成:
             train_indices, test_indices 的元组
         """
+        # 特殊处理1折的情况，直接使用简单的分割
+        if self.n_splits == 1:
+            print("使用单折验证：随机划分80%数据用于训练，20%用于测试")
+            indices = np.arange(len(X))
+            np.random.shuffle(indices)
+            split_point = int(len(indices) * 0.8)
+            yield indices[:split_point], indices[split_point:]
+            return
+
         if y is None:
             raise ValueError("必须提供目标值（坐标）以进行空间交叉验证")
 
@@ -79,6 +88,7 @@ class SpatialCrossValidator:
                 test_idx = np.where(test_mask)[0]
                 train_idx = np.where(~test_mask)[0]
                 yield train_idx, test_idx
+
 
     def get_n_splits(self, X=None, y=None, groups=None):
         """获取分割数"""

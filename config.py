@@ -103,18 +103,19 @@ OPTIMIZATION_CONFIG = {
     'timeout': None,                           # 优化超时时间（秒），None表示无限制
     'n_jobs': 1,                               # 并行运行的作业数
     'direction': 'minimize',                   # 优化方向: 'minimize'表示越小越好, 'maximize'表示越大越好
-    'cv': 5,                                   # 交叉验证的折数
+    'cv': 1,                                   # 交叉验证的折数
     'cv_method': 'spatial',                    # 交叉验证方法:
                                                # - 'spatial': 空间感知的交叉验证，考虑地理位置
                                                # - 'random': 随机分割
                                                # - 'hierarchical': 按建筑和楼层分层的交叉验证
-    'search_space': 'default'                  # 搜索空间类型，影响考虑的超参数范围:
+    'search_space': 'self'                  # 搜索空间类型，影响考虑的超参数范围:
                                                # - 'default': 平衡搜索复杂度和性能的默认空间
                                                # - 'light': 轻量级搜索空间，适合快速测试
                                                # - 'comprehensive': 全面的搜索空间，更多参数组合
                                                # - 'feature_extraction': 专注于特征提取
                                                # - 'ensemble': 专注于集成方法
                                                # - 'end2end': 专注于端到端模型
+                                               # - 'self': 自己定的
 }
 
 # 评估配置 - 控制模型评估和结果分析
